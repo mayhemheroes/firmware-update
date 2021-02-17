@@ -6,6 +6,7 @@ use ectool::{
     Access,
     AccessLpcDirect,
     Firmware,
+    SecurityState,
     Spi,
     SpiRom,
     SpiTarget,
@@ -16,9 +17,18 @@ use std::{
     cell::Cell,
     ffi::wstr,
     fs::{find, load},
+    ptr,
     str,
 };
-use std::uefi::{self, status::{Error, Result}};
+use std::uefi::{
+    self,
+    reset::ResetType,
+    status::{
+        Error,
+        Result,
+        Status
+    }
+};
 
 use super::{ECROM, EC2ROM, ECTAG, FIRMWAREDIR, FIRMWARENSH, pci_read, shell, Component};
 
@@ -346,6 +356,35 @@ unsafe fn flash_legacy(firmware_data: &[u8]) -> core::result::Result<(), ectool:
     Ok(())
 }
 
+unsafe fn security_unlock() -> core::result::Result<(), ectool::Error> {
+    let access = AccessLpcDirect::new(UefiTimeout::new(100_000))?;
+    let mut ec = ectool::Ec::new(access)?;
+
+    match ec.security_get() {
+        Ok(state) => match state {
+            // If already unlocked, continue
+            SecurityState::Unlock => Ok(()),
+            // If not unlocked, send the prepare to unlock command and shut off
+            _ => {
+                ec.security_set(SecurityState::PrepareUnlock)?;
+
+                (std::system_table().RuntimeServices.ResetSystem)(
+                    ResetType::Shutdown,
+                    Status(0),
+                    0,
+                    ptr::null()
+                );
+            }
+        },
+        Err(err) => match err {
+            // Firmware is older than security state support, assume unlocked
+            ectool::Error::Protocol(1) => Ok(()),
+            // Otherwise return error
+            _ => Err(err),
+        },
+    }
+}
+
 unsafe fn flash_read<S: Spi>(spi: &mut SpiRom<S, UefiTimeout>, rom: &mut [u8], sector_size: usize) -> core::result::Result<(), ectool::Error> {
     let mut address = 0;
     while address < rom.len() {
@@ -540,6 +579,19 @@ impl Component for EcComponent {
     }
 
     fn validate(&self) -> Result<bool> {
+        match &self.ec {
+            // Make sure EC is unlocked if running System76 EC
+            EcKind::System76(_) => match unsafe { security_unlock() } {
+                Ok(()) => (),
+                Err(err) => {
+                    println!("{} Failed to unlock: {:?}", self.name(), err);
+                    return Err(Error::DeviceError);
+                }
+            },
+            // Assume EC is unlocked if not running System76 EC
+            _ => (),
+        }
+
         let data = load(self.path())?;
         Ok(self.validate_data(data))
     }
