@@ -1,0 +1,7 @@
+project: firmware-update
+target: png
+
+cmds:
+  - cmd: /png
+  - cmd: /png_no_inst @@
+    libfuzzer: false
