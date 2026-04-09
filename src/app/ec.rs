@@ -58,7 +58,7 @@ pub enum EcKind {
 
 impl EcKind {
     pub unsafe fn new(primary: bool) -> Self {
-        // Special case for pang12, pang13, pang14, and pang15
+        // Special case for pang12, pang13, pang14, pang15, and panp16
         {
             let mut system_version = String::new();
 
@@ -82,6 +82,7 @@ impl EcKind {
                 || system_version == "pang13"
                 || system_version == "pang14"
                 || system_version == "pang15"
+                || system_version == "panp16"
             {
                 return EcKind::Pang(
                     unsafe { ectool::Pmc::new(0x62, UefiTimeout::new(100_000)) },
@@ -229,7 +230,7 @@ impl EcComponent {
     }
 
     pub fn validate_data(&self, data: Vec<u8>) -> bool {
-        // Special case for pang12, pang13, pang14, and pang15
+        // Special case for pang12, pang13, pang14, pang15, and panp16
         match &self.ec {
             EcKind::Pang(_pmc, _system_version) => {
                 // XXX: Get flash size programatically?
