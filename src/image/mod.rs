@@ -137,6 +137,14 @@ impl Renderer for Image {
         true
     }
 
+    fn update(&mut self) -> bool {
+        true
+    }
+
+    fn update_rects(&mut self, _rects: &[(i32, i32, u32, u32)]) -> bool {
+        true
+    }
+
     fn mode(&self) -> &Cell<Mode> {
         &self.mode
     }

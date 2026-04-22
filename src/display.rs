@@ -104,6 +104,22 @@ impl Renderer for Display {
         self.blit(0, 0, w, h)
     }
 
+    fn update(&mut self) -> bool {
+        let w = self.w;
+        let h = self.h;
+        self.blit(0, 0, w, h)
+    }
+
+    fn update_rects(&mut self, rects: &[(i32, i32, u32, u32)]) -> bool {
+        let mut success = true;
+        for &(x, y, w, h) in rects {
+            if !self.blit(x, y, w, h) {
+                success = false;
+            }
+        }
+        success
+    }
+
     fn mode(&self) -> &Cell<Mode> {
         &self.mode
     }
@@ -177,6 +193,22 @@ impl Renderer for ScaledDisplay<'_> {
         let w = self.width();
         let h = self.height();
         self.rect(0, 0, w, h, color);
+    }
+
+    fn update(&mut self) -> bool {
+        let w = self.w;
+        let h = self.h;
+        self.blit(0, 0, w, h)
+    }
+
+    fn update_rects(&mut self, rects: &[(i32, i32, u32, u32)]) -> bool {
+        let mut success = true;
+        for &(x, y, w, h) in rects {
+            if !self.blit(x, y, w, h) {
+                success = false;
+            }
+        }
+        success
     }
 
     fn mode(&self) -> &Cell<Mode> {
