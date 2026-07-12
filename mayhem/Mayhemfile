@@ -1,0 +1,12 @@
+project: firmware-update
+target: png
+
+# In-process libFuzzer harness over the real upstream BMP parser
+# (image::bmp::parse). Built by mayhem/build.sh -> /mayhem/png. Kept named `png`
+# for parity with the archived original integration.
+cmds:
+  - cmd: /mayhem/png
+
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/png/testsuite

@@ -1,0 +1,30 @@
+# Additive cargo-fuzz crate (leaves upstream sources untouched). It fuzzes the
+# EXACT upstream BMP parser by INCLUDING the real source module via #[path]
+# (no copy, no edit) — see fuzz_targets/png.rs. orbclient is pinned to the same
+# version/features the upstream crate uses so the included module compiles verbatim.
+[package]
+name = "firmware-update-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Standalone crate — detach from the upstream package dir so cargo doesn't try to
+# treat this as part of the root (edition-2024, no_std UEFI) package.
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+orbclient = { version = "=0.3.48", default-features = false, features = ["unifont"] }
+
+[[bin]]
+name = "png"
+path = "fuzz_targets/png.rs"
+test = false
+doc = false
+bench = false
+
+[profile.release]
+debug = 2

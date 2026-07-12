@@ -1,0 +1,22 @@
+# Functional-oracle crate for mayhem/test.sh. Like the fuzz crate, it INCLUDES the
+# real upstream `image` module verbatim via #[path] and exercises the genuine
+# `image::bmp::parse` with known-answer BMP inputs, printing the parsed results so
+# mayhem/test.sh can assert them against hand-computed golden values.
+[package]
+name = "firmware-update-oracle"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Standalone crate (see fuzz/Cargo.toml).
+[workspace]
+
+[dependencies]
+orbclient = { version = "=0.3.48", default-features = false, features = ["unifont"] }
+
+[[bin]]
+name = "bmp_oracle"
+path = "src/main.rs"
+
+[profile.release]
+debug = 1

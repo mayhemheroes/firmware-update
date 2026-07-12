@@ -1,0 +1,9 @@
+# Prune the docker build context. .git is NOT ignored — the commit image bakes the
+# full repo including .git (verify-repo contract).
+build
+firmware
+target
+mayhem/fuzz/target
+mayhem/fuzz/corpus
+mayhem/fuzz/artifacts
+mayhem/oracle/target
